@@ -1,0 +1,53 @@
+<!doctype html>  
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Smokey Test</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="smokemonster.js"></script>
+
+</head>
+
+<body onload="init();">
+  <script>
+  	var mySprite = new SmokeMonster.Sprite();
+    var spAlpha = 255;
+    var spAngle = 0;
+
+  	function init()
+    {
+    	mySprite.loadFromFile("buildings.png");
+        mySprite.position.type = SmokeMonster.PositionType.ptPercent;
+        mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
+        mySprite.offset.position.make(50, 50);
+        mySprite.position.make(50, 50);
+        //mySprite.scale.x = 1.33;
+        //mySprite.visible = false;
+        //mySprite.clipRect.make(0, 32, 120, 50);
+        //mySprite.alpha = spAlpha;
+        mySprite.instance.onclick = function() { alert(typeof mySprite); }
+
+
+        mySprite.draw();
+    	//setInterval(update, 33);
+    }
+
+    function update()
+    {
+    	spAlpha = spAlpha - 1;
+        spAngle = spAngle + 1;
+        mySprite.alpha = spAlpha;
+        mySprite.angle = spAngle;
+
+    	mySprite.draw();
+        //spAlpha = spAlpha - 1;
+
+    }
+
+  </script>
+</body>
+</html>
