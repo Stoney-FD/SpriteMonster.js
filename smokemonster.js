@@ -167,16 +167,16 @@ SmokeMonster.Color = function(r, g, b, a)
   
 };
 
-SmokeMonster.PositionType =
+SmokeMonster.ScaleType =
 {
-  ptPixel: 0,
-  ptPercent: 1
+  stPixel: 0,
+  stPercent: 1
 }
 
 SmokeMonster.Vector = function(x, y, z)
 {
   // Public
-  this.type = SmokeMonster.PositionType.ptPixel;
+  this.type = SmokeMonster.ScaleType.stPixel;
   
   // Constructor
   this.x = (typeof(x) === "undefined") ? 0.0 : x;
@@ -248,32 +248,68 @@ SmokeMonster.Rect = function(x, y, w, h)
   
 };
 
-SmokeMonster.Screen = function()
+var _Screen = new function()
 {
-	var width = 0,
-    	height = 0;
+  this.width = 0;
+  this.height = 0;
 
-	this.getSize = function()
+	this.refresh = function()
+  {
+    if ( typeof( window.innerWidth ) == 'number' )
     {
-
+      //Non-IE
+      if (this.width != window.innerWidth) { this.width = window.innerWidth; changed = true; }
+      if (this.height != window.innerHeight) { this.height = window.innerHeight; changed = true; }
+    }
+    else if ( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) )
+    {
+      //IE 6+ in 'standards compliant mode'
+      if (this.width != document.documentElement.clientWidth) { this.width = document.documentElement.clientWidth; changed = true; }
+      if (this.height != document.documentElement.clientHeight) { this.height = document.documentElement.clientHeight; changed = true; }
+    }
+    else if (document.body && ( document.body.clientWidth || document.body.clientHeight ) )
+    {
+      //IE 4 compatible
+      if (this.width != document.body.clientWidth) { this.width = document.body.clientWidth; changed = true; }
+      if (this.height != document.body.clientHeight) { this.height = document.body.clientHeight; changed = true; }
     }
 
-    this.width = width;
-    this.height = height;
-}
+  }
+  
+};
 
+SmokeMonster.Screen = _Screen;
+
+_Screen.refresh(); //< Call _Screen.refresh to set width/height variable
+window.onresize = function() { _Screen.refresh(); } //< Also: Refresh values if windows has been resized
 
 
 SmokeMonster.Texture = function()
 {
   // Public
+  var loaded = false,
+      error = false,
+      _width = 0,
+      _height = 0;
+  
   this.img = new Image();
+  this.img.onload = function()
+  {
+    loaded = true;
+    error = false;
+    
+    _width = this.width;
+    _height = this.height;
+  }
+
+  this.img.onerror = function()
+  {
+    loaded = false;
+    error = true;
+  }
   
   this.width = 0;
   this.height = 0;
-  
-  this.loaded = false;
-  this.error = false;
   
   this.src = "";
   
@@ -282,20 +318,17 @@ SmokeMonster.Texture = function()
     this.src = aFilename;
     this.img.src = aFilename;
     
-    this.width = this.img.width;
-    this.height = this.img.height;
+    _width = this.img.width;
+    _height = this.img.height;
+  }
+  
+  this.isLoaded = function()
+  {
+    // Bit of a dirty hack here, but it works
+    if (this.width == 0) this.width = _width;
+    if (this.height == 0) this.height = _height;
     
-    this.img.onload = function()
-    {
-      this.loaded = true;
-      this.error = false;
-    }
-
-    this.img.onerror = function()
-    {
-      this.loaded = false;
-      this.error = true;
-    }
+    return loaded;
   }
 };
 
@@ -308,10 +341,10 @@ SmokeMonster.Container = function(parentNode)
   	  else this.parent = parentNode;
 
     this.id = createNewUniqueID("container");
-    this.instance = document.createElement("div");
-    this.instance.id = this.id;
+    this.node = document.createElement("div");
+    this.node.id = this.id;
 
-    SmokeMonster.add('body', this.instance);
+    SmokeMonster.add('body', this.node);
 
     this.alpha = 255;
     this.angle = 0.0;
@@ -332,7 +365,7 @@ SmokeMonster.ImageOffset = function()
 {
   this.position = new SmokeMonster.Vector();
   this.rotation = new SmokeMonster.Vector(50, 50);
-  this.rotation.type = SmokeMonster.PositionType.ptPercent;
+  this.rotation.type = SmokeMonster.ScaleType.stPercent;
 }
 
 SmokeMonster.Sprite = function(parentNode)
@@ -346,14 +379,14 @@ SmokeMonster.Sprite = function(parentNode)
 
   this.id = createNewUniqueID("sprite");
 
-  this.instance = document.createElement("div");
-  this.instance_img = document.createElement("img");
+  this.node = document.createElement("div");
+  this.node_img = document.createElement("img");
 
-  this.instance.id = this.id;
-  this.instance_img.id = "img-" + this.id;
+  this.node.id = this.id;
+  this.node_img.id = "img-" + this.id;
 
-  SmokeMonster.add(this.instance, this.instance_img);
-  SmokeMonster.add('body', this.instance);
+  SmokeMonster.add(this.node, this.node_img);
+  SmokeMonster.add('body', this.node);
 
 
   this.alpha = 255;
@@ -365,8 +398,8 @@ SmokeMonster.Sprite = function(parentNode)
   this.scaleClipRect = true;
   this.texture = new SmokeMonster.Texture();
 
-  this.width = 0;
-  this.height = 0;
+  this.width;
+  this.height;
 
   this.visible = true;
 
@@ -375,7 +408,7 @@ SmokeMonster.Sprite = function(parentNode)
   {
     this.texture.loadFromFile(aFilename);
 
-    this.instance_img.src = this.texture.src;
+    this.node_img.src = this.texture.src;
 
     this.width = this.texture.width;
     this.height = this.texture.height;
@@ -397,20 +430,22 @@ SmokeMonster.Sprite = function(parentNode)
   
   this.draw = function()
   {
-    //if (this.instance_img.src == "") return;
+    //if (this.node_img.src == "") return;
     //if (!this.texture.loaded) return;
 
+    if (!this.texture.isLoaded()) return;
+    
     // If someone tries to trick the Smoke monster and change the width or height
     // the smoke monster tricks you and _actually_ scales the image... Muhahaha
     // (width and height are usually supposed to be read-only properties)
     if (this.width != this.texture.width)
     {
-      this.scale.x = (this.width / this.texture.width);
+      if (this.width > 0) this.scale.x = (this.width / this.texture.width);
       this.width = this.texture.width; //< Smoke Monster tricks you again and resets width :)
     }
     if (this.height != this.texture.height)
     {
-      this.scale.y = (this.height / this.texture.height);
+      if (this.height > 0) this.scale.y = (this.height / this.texture.height);
       this.height = this.texture.height; //< Smoke Monster tricks you again and resets height :)
     }
     // Btw: It is nice to be able to personify a piece of software
@@ -438,7 +473,7 @@ SmokeMonster.Sprite = function(parentNode)
       {
         switch (this.position.type)
         {
-          case SmokeMonster.PositionType.ptPixel:
+          case SmokeMonster.ScaleType.stPixel:
           {
             var margin = 0;
 
@@ -446,9 +481,9 @@ SmokeMonster.Sprite = function(parentNode)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.PositionType.ptPixel:
+                case SmokeMonster.ScaleType.stPixel:
               	  margin = this.offset.position.x; break;
-                case SmokeMonster.PositionType.ptPercent:
+                case SmokeMonster.ScaleType.stPercent:
                   margin = (this.offset.position.x / 100) * (this.width * this.scale.x); break;
               }
             }
@@ -456,7 +491,7 @@ SmokeMonster.Sprite = function(parentNode)
             styleText = styleText + "left:" + (this.position.x - margin) + "px;";
             break;
           }
-          case SmokeMonster.PositionType.ptPercent:
+          case SmokeMonster.ScaleType.stPercent:
           {
             var margin = 0;
 
@@ -464,9 +499,9 @@ SmokeMonster.Sprite = function(parentNode)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.PositionType.ptPixel:
+                case SmokeMonster.ScaleType.stPixel:
               	  margin = (this.offset.position.x / this.width) * 100; break;
-                case SmokeMonster.PositionType.ptPercent:
+                case SmokeMonster.ScaleType.stPercent:
                   margin = (this.offset.position.x / 100); break;
               }
             }
@@ -480,7 +515,7 @@ SmokeMonster.Sprite = function(parentNode)
       {
         switch (this.position.type)
         {
-          case SmokeMonster.PositionType.ptPixel:
+          case SmokeMonster.ScaleType.stPixel:
           {
             var margin = 0;
 
@@ -488,9 +523,9 @@ SmokeMonster.Sprite = function(parentNode)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.PositionType.ptPixel:
+                case SmokeMonster.ScaleType.stPixel:
               	  margin = this.offset.position.y; break;
-                case SmokeMonster.PositionType.ptPercent:
+                case SmokeMonster.ScaleType.stPercent:
                   margin = (this.offset.position.y / 100) * (this.height * this.scale.y); break;
               }
             }
@@ -498,7 +533,7 @@ SmokeMonster.Sprite = function(parentNode)
             styleText = styleText + "top:" + (this.position.y - margin) + "px;";
             break;
           }
-          case SmokeMonster.PositionType.ptPercent:
+          case SmokeMonster.ScaleType.stPercent:
           {
             var margin = 0;
 
@@ -506,9 +541,9 @@ SmokeMonster.Sprite = function(parentNode)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.PositionType.ptPixel:
+                case SmokeMonster.ScaleType.stPixel:
               	  margin = (this.offset.position.y / this.height) * 100; break;
-                case SmokeMonster.PositionType.ptPercent:
+                case SmokeMonster.ScaleType.stPercent:
                   margin = (this.offset.position.y / 100); break;
               }
             }
@@ -529,19 +564,19 @@ SmokeMonster.Sprite = function(parentNode)
     		styleText = styleText + "clip:rect(" + this.clipRect.y + "px, " + (this.clipRect.w + this.clipRect.x) + "px, " + (this.clipRect.h + this.clipRect.y) + "px, " + this.clipRect.x + "px); ";
     }
 
-    this.instance.style.cssText = styleText;
-    //alert(this.instance.style.cssText);
+    this.node.style.cssText = styleText;
+    //alert(this.node.style.cssText);
 
-    this.instance_img.width = (this.texture.width * this.scale.x);
-    this.instance_img.height = (this.texture.height * this.scale.y);
+    this.node_img.width = (this.texture.width * this.scale.x);
+    this.node_img.height = (this.texture.height * this.scale.y);
 
 
   }
 };
 
-SmokeMonster.Label = function()
+SmokeMonster.Label = function(parentNode)
 {
-  this.instance = document.createElement('div');
+  this.node = document.createElement('div');
   this.color = new SmokeMonster.Color();
   this.caption = "";
   this.visible = true;
@@ -560,40 +595,15 @@ SmokeMonster.ButtonType =
   btImage: 3
 }
 
-SmokeMonster.Button = function()
+SmokeMonster.Button = function(parentNode)
 {
   this.buttonType = SmokeMonster.ButtonType.btGraphical;
   
-  this.instance = document.createElement('div');
+  this.node = document.createElement('div');
   
   
   this.draw = function()
   {
     
   }
-};
-
-SmokeMonster.GUI = new function()
-{
-  this.drawRect = function(rect, color)
-  {
-   
-   
-  }
-  
-  // Only working if CSS3 is supported
-  this.drawRoundedRect = function(rect, color, roundRadius)
-  {
-    
-    
-  }
-  
-  // Only working if CSS3 is supported
-  this.drawCircle = function(rect, color)
-  {
-    
-    
-  }
-  
-  
 };
