@@ -1,0 +1,65 @@
+SmokeMonster.js
+
+What is SmokeMonster?
+	SmokeMonster is John Locke, or is he?
+	But seriously, SmokeMonster.js is a small graphics library based on DOM
+
+Why SmokeMonster?
+	Well, there had to be some kind of nemesis on the island, right?
+	But seriously, we here at Freeze Development have been making video games
+	for over two centuries and with our...
+	But seriously seriously we are working on ElysionWeb, a HTML5 game framwork
+	using Canvas, WebGL and SVG/VML with Raphael as its rendering backends.
+	So want if you want to use the DOM to put together some small simple game
+	you are doomed if you wanted to use ElysionWeb here. Well, "dommed" is such 
+ a strong word here. ;)
+ 
+ This is what SmokeMonster was made for:
+   It's a tiny web graphics library based on nano.js
+ 
+ You can make quick and simple Javascript games based on DOM. 
+ But you should definitely give ElysionWeb a try once it's finished.
+
+ 
+
+How is SmokeMonster?
+Oh, you wanna see how it's done? Here ya go:
+		You don't need to initialize
+
+
+   var mySprite = new SmokeMonster.Sprite();
+   mySprite.loadFromFile("freckles.png");
+   mySprite.position.make(50, 50);
+   mySprite.draw();
+
+   This will draw mySprite at x: 50 and y: 50.
+
+   SmokeMonster.GUI.drawRect(new SmokeMonster.Rect(10, 10, 300, 300));
+
+
+This whole SmokeMonster thing was made in just a few days.
+There won't probably be much new features after this initial relase, as
+we will concentrate our efforts on ElysionWeb. There may be a bug fix release
+if users find some nasty bugs.
+
+
+License:
+Copyright (C) 2011 by Johannes Stein, Freeze Development (http://www.freeze-dev.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

@@ -169,8 +169,8 @@ SmokeMonster.Color = function(r, g, b, a)
 
 SmokeMonster.ScaleType =
 {
-  stPixel: 0,
-  stPercent: 1
+  stPixel: "px",
+  stPercent: "%"
 }
 
 SmokeMonster.Vector = function(x, y, z)
@@ -500,12 +500,12 @@ SmokeMonster.Sprite = function(parentNode)
               switch (this.offset.position.type)
               {
                 case SmokeMonster.ScaleType.stPixel:
-              	  margin = (this.offset.position.x / this.width) * 100; break;
+              	  margin = (this.offset.position.x / _Screen.width) * 100; break;
                 case SmokeMonster.ScaleType.stPercent:
-                  margin = (this.offset.position.x / 100); break;
+                  margin = (((this.offset.position.x / 100) * this.width) / _Screen.width) * 100; break;
               }
             }
-
+            
             styleText = styleText + "left:" + (this.position.x - margin) + "%;";
             break;
           }
@@ -542,9 +542,9 @@ SmokeMonster.Sprite = function(parentNode)
               switch (this.offset.position.type)
               {
                 case SmokeMonster.ScaleType.stPixel:
-              	  margin = (this.offset.position.y / this.height) * 100; break;
+              	  margin = (this.offset.position.y / _Screen.height) * 100; break;
                 case SmokeMonster.ScaleType.stPercent:
-                  margin = (this.offset.position.y / 100); break;
+                  margin = (((this.offset.position.y / 100) * this.height) / _Screen.height) * 100; break;
               }
             }
 

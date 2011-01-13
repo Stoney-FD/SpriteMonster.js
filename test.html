@@ -16,19 +16,18 @@
   <script>
   	var mySprite = new SmokeMonster.Sprite();
   	var mySecondSprite = new SmokeMonster.Sprite();
-  	var myTexture = new SmokeMonster.Texture();
     var spAlpha = 255;
     var spAngle = 0;
 
   	function init()
     {
-      myTexture.loadFromFile("buildings.png");
       
-    	mySprite.loadFromFile("buildings.png");
+    	mySprite.loadFromFile("images/freckles.png");
         //mySprite.position.type = SmokeMonster.PositionType.ptPercent;
         //mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
-        //mySprite.offset.position.make(100, 100);
-        mySprite.position.scaleType = SmokeMonster.ScaleType.stPercent;
+        mySprite.offset.position.type = "%";
+        mySprite.offset.position.make(50, 50);
+        mySprite.position.type = SmokeMonster.ScaleType.stPercent;
         mySprite.position.make(50, 50);
         //mySprite.scale.x = 1.33;
         //mySprite.visible = false;
@@ -39,8 +38,8 @@
       mySprite.position.z = 1;
 
 
-      mySecondSprite.loadFromFile("buildings.png");
-      mySecondSprite.position.make(150, 150, 2);
+      mySecondSprite.loadFromFile("images/freckles.png");
+      mySecondSprite.position.make(150, 150);
       mySecondSprite.node.onmouseover = function() { mySecondSprite.alpha = 128; }
       mySecondSprite.node.onmouseout = function() { mySecondSprite.alpha = 255; }
 
