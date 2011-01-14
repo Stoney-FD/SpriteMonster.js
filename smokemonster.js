@@ -248,6 +248,7 @@ SmokeMonster.Rect = function(x, y, w, h)
   
 };
 
+// TODO: Change this to module pattern!
 var _Screen = new function()
 {
   this.width = 0;
@@ -279,8 +280,8 @@ var _Screen = new function()
 };
 
 SmokeMonster.Screen = _Screen;
-
 _Screen.refresh(); //< Call _Screen.refresh to set width/height variable
+
 window.onresize = function() { _Screen.refresh(); } //< Also: Refresh values if windows has been resized
 
 
@@ -396,6 +397,7 @@ SmokeMonster.Sprite = function(parentNode)
   this.position = new SmokeMonster.Vector();
   this.scale = new SmokeMonster.Vector(1.0, 1.0);
   this.scaleClipRect = true;
+  this.skew = new SmokeMonster.Vector(0.0, 0.0);
   this.texture = new SmokeMonster.Texture();
 
   this.width;
@@ -430,9 +432,6 @@ SmokeMonster.Sprite = function(parentNode)
   
   this.draw = function()
   {
-    //if (this.node_img.src == "") return;
-    //if (!this.texture.loaded) return;
-
     if (!this.texture.isLoaded()) return;
     
     // If someone tries to trick the Smoke monster and change the width or height
@@ -460,7 +459,32 @@ SmokeMonster.Sprite = function(parentNode)
       styleText = styleText + "filter:alpha(opacity=" + this.alpha + "); -moz-opacity:" + (this.alpha / 255) + "; -khtml-opacity:" + (this.alpha / 255) + "; opacity:" + (this.alpha / 255) + "; ";
 
     if ((this.angle / 360) != 0)
+    {
       styleText = styleText + "-webkit-transform: rotate(" + this.angle + "deg); -moz-transform: rotate(" + this.angle + "deg); -o-transform: rotate(" + this.angle + "); rotation:" + this.angle + "deg;";
+
+
+      if ((this.offset.rotation.type != "%") && (this.offset.rotation.x != 50) && (this.offset.rotation.y != 50))
+      {
+        switch (this.offset.rotation.type)
+        {
+          case "%":
+          {
+            styleText = styleText + "-moz-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-webkit-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-o-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;";
+            break;
+          }
+          default:
+          {
+            styleText = styleText + "-moz-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-webkit-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-o-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;";
+            break;
+          }
+        }
+        
+      }
+    }
+    
+    if ((this.skew.x != 0) || (this.skew.y != 0))
+      styleText = styleText + "-moz-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-webkit-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-o-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);"; 
+
 
     if ((this.position.x != 0) || (this.position.y != 0))
     {

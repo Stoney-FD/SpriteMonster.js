@@ -27,6 +27,11 @@
         //mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
         mySprite.offset.position.type = "%";
         mySprite.offset.position.make(50, 50);
+        
+        
+        mySprite.offset.rotation.type = "%";
+        mySprite.offset.rotation.make(0, 0);
+        
         mySprite.position.type = SmokeMonster.ScaleType.stPercent;
         mySprite.position.make(50, 50);
         //mySprite.scale.x = 1.33;
@@ -40,6 +45,7 @@
 
       mySecondSprite.loadFromFile("images/freckles.png");
       mySecondSprite.position.make(150, 150);
+      mySecondSprite.skew.y = 22.5;
       mySecondSprite.node.onmouseover = function() { mySecondSprite.alpha = 128; }
       mySecondSprite.node.onmouseout = function() { mySecondSprite.alpha = 255; }
 
