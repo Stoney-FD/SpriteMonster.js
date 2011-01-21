@@ -1,0 +1,121 @@
+<!doctype html>  
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Smokey Test</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="../smokemonster.js"></script>
+
+</head>
+
+<body onload="init();">
+  <script>
+  	var mySprite = new SmokeMonster.Sprite();
+  	var mySecondSprite = new SmokeMonster.Sprite();
+    var spAlpha = 255;
+    var spAngle = 0;
+
+  	function init()
+    {
+      
+    	mySprite.loadFromFile("../images/freckles.png");
+        //mySprite.position.type = SmokeMonster.PositionType.ptPercent;
+        //mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
+        //mySprite.offset.position.type = "%";
+        //mySprite.offset.position.make(50, 50);
+        
+        
+        mySprite.offset.transform.type = "%";
+        mySprite.offset.transform.make(50, 50);
+
+        mySprite.offset.position.type = "%";
+        mySprite.offset.position.make(50, 50);
+
+        mySprite.scale.x = 1.0;
+        mySprite.scale.y = 1.0;
+        
+        mySprite.position.type = SmokeMonster.UnitType.stPercent;
+        mySprite.position.make(50, 50);
+        //mySprite.scale.x = 1.33;
+        //mySprite.visible = false;
+        //mySprite.clipRect.make(0, 32, 120, 50);
+        //mySprite.alpha = spAlpha;
+        mySprite.node.onclick = function() { alert(SmokeMonster.Screen.width); }
+
+      mySprite.position.z = 1;
+
+
+      mySecondSprite.loadFromFile("../images/freckles.png");
+      mySecondSprite.position.make(150, 150);
+      //mySecondSprite.border.width = 2;
+      mySecondSprite.border.color.make(128, 128, 128);
+      //mySecondSprite.border.radius.make(100, 100, 100, 100);
+	  mySecondSprite.clipRect.make(0, 0, 128, 128);
+      mySecondSprite.shadow.blur = 5;
+      mySecondSprite.shadow.spread = 5;
+      mySecondSprite.shadow.visible = true;
+	  mySecondSprite.className = "lalala";
+	  //mySecondSprite.cursor = "pointer";
+	  mySecondSprite.href = "http://www.freeze-dev.com";
+
+	  mySecondSprite.hover(
+	  function (event) { mySecondSprite.addAnimation("left", 500); mySecondSprite.addAnimation("top", 1500); mySecondSprite.position.make(20, 20); },
+	  function (event) { mySecondSprite.scale.make(1.0, 1.0); }
+	  );
+	  
+	  //mySecondSprite.click(
+	  //function (event)
+	  //{
+	  //  alert(mySecondSprite.node.style.cssText);
+	  //}
+	  //);
+	  
+      /*mySecondSprite.mouseover = function(event)
+      {
+        mySecondSprite.scale.x = 0.5;
+        mySecondSprite.scale.y = 0.5;
+        mySecondSprite.animate("all", 500);
+      }
+
+      mySecondSprite.node.onclick = function()
+      {
+
+
+        //mySecondSprite.alpha = 32;
+        //mySecondSprite.addAnimation("alpha", 200);
+      }
+
+      mySecondSprite.mouseout = function()
+      {
+        mySecondSprite.scale.x = 1.0;
+        mySecondSprite.scale.y = 1.0;
+      }*/
+
+      //document.write(mySprite.position.toString("left:", "top:", "z-index:", true, true, false));
+
+    	setInterval(update, 33);
+    }
+
+    function update()
+    {
+    	spAlpha = spAlpha - 1;
+        spAngle = spAngle + 1;
+        
+        if (spAlpha < 0) spAlpha = 255;
+        
+        mySprite.alpha = spAlpha;
+        mySprite.angle = spAngle;
+
+    	mySprite.draw();
+    	mySecondSprite.draw();
+        //spAlpha = spAlpha - 1;
+
+    }
+
+  </script>
+</body>
+</html>

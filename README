@@ -11,33 +11,81 @@ Why SmokeMonster?
 	But seriously seriously we are working on ElysionWeb, a HTML5 game framwork
 	using Canvas, WebGL and SVG/VML with Raphael as its rendering backends.
 	So want if you want to use the DOM to put together some small simple game
-	you are doomed if you wanted to use ElysionWeb here. Well, "dommed" is such 
- a strong word here. ;)
- 
- This is what SmokeMonster was made for:
-   It's a tiny web graphics library based on nano.js
- 
- You can make quick and simple Javascript games based on DOM. 
- But you should definitely give ElysionWeb a try once it's finished.
+	you are doomed if you wanted to use ElysionWeb here. Well, "doomed" is such
+ 	a strong word here. ;)
 
- 
+    This is what SmokeMonster was made for:
+      It's a tiny web graphics library based on Document Object Model (DOM).
+
+    You can make quick and simple Javascript games based on DOM.
+    But you should definitely give ElysionWeb a try once it's finished.
+
+
 
 How is SmokeMonster?
-Oh, you wanna see how it's done? Here ya go:
-		You don't need to initialize
+	Oh, you wanna see how it's done? Here ya go:
+		You don't need to initialize anything, just begin creating your
+		objects.
 
 
-   var mySprite = new SmokeMonster.Sprite();
-   mySprite.loadFromFile("freckles.png");
-   mySprite.position.make(50, 50);
-   mySprite.draw();
+    var mySprite = new SmokeMonster.Sprite();
+    mySprite.loadFromFile("freckles.png");
+    mySprite.position.make(50, 50);
+    mySprite.draw();
 
-   This will draw mySprite at x: 50 and y: 50.
+    This will draw a sprite called mySprite at x: 50 and y: 50. You can
+	manipulate additional attributes, like rotation, scaling, opacity, etc.
+	Take a look at this:
 
-   SmokeMonster.GUI.drawRect(new SmokeMonster.Rect(10, 10, 300, 300));
+	mySprite.alpha = 128;
+	mySprite.angle = 22.5;
+	mySprite.scale.x = 2.5;
+
+	Now our sprite is being drawn with at half opacity, rotated 22.5 degrees
+	and its witdth scale at factor 2.5.
 
 
-This whole SmokeMonster thing was made in just a few days.
+	var myContainer = new SmokeMonster.Container(200, 200);
+	myContainer.position.make(60, 60);
+	myContainer.backgroundColor.make(255, 255, 0);
+	myContainer.borderRadius.make(15, 15);
+	myContainer.draw();
+
+	A container can be actually be everything you want it to be, for example
+	a rect, a rounded rect (which it is in this example), or just an object
+	for grouping child objects.
+    The constructor takes width and height parameter, after that the position
+	will be set to Left: 60 | Top: 60, with a yellow background color and
+	a barder radius of 15 pixels.
+	The draw() method needs to be called on every object to be displayed
+	on the page.
+
+
+	Grouping objects:
+    The first parameter of an object can also take the parent object, in which
+	case the new object will be the child object of the specified object.
+	The child object position is then relative, the parent object's position
+	is still absolute.
+	If you want to get the absolute position of an object, use the
+	the method getAbsolutePosition() which will return the position
+	as elVector.
+
+	mySprite = new elSprite(myContainer);
+    mySprite.position.make(40, 40);
+
+	mySprite will now be drawn at Left: 100 | Top: 100. By default and if
+	not specified any different the child object's attributes will be the
+	same as the parent's. Except for unique attributes.
+
+
+
+So, that were the basics, if you want to know more take a look at the
+examples and read the documentation.
+
+
+This whole SmokeMonster thing was made in just a few days. It hasn't been
+a constant development though, just a few hours every now and then.
+
 There won't probably be much new features after this initial relase, as
 we will concentrate our efforts on ElysionWeb. There may be a bug fix release
 if users find some nasty bugs.

@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="smokemonster.js"></script>
+  <script src="../smokemonster.js"></script>
 
 </head>
 
@@ -22,7 +22,7 @@
   	function init()
     {
       
-    	mySprite.loadFromFile("images/freckles.png");
+    	mySprite.loadFromFile("../images/freckles.png");
         //mySprite.position.type = SmokeMonster.PositionType.ptPercent;
         //mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
         mySprite.offset.position.type = "%";
@@ -32,7 +32,7 @@
         mySprite.offset.rotation.type = "%";
         mySprite.offset.rotation.make(0, 0);
         
-        mySprite.position.type = SmokeMonster.ScaleType.stPercent;
+        mySprite.position.type = SmokeMonster.UnitType.stPercent;
         mySprite.position.make(50, 50);
         //mySprite.scale.x = 1.33;
         //mySprite.visible = false;
@@ -43,11 +43,14 @@
       mySprite.position.z = 1;
 
 
-      mySecondSprite.loadFromFile("images/freckles.png");
+      mySecondSprite.loadFromFile("../images/freckles.png");
       mySecondSprite.position.make(150, 150);
-      mySecondSprite.skew.y = 22.5;
+      //mySecondSprite.skew.y = 22.5;
+      mySecondSprite.shadow.visible = true;
       mySecondSprite.node.onmouseover = function() { mySecondSprite.alpha = 128; }
       mySecondSprite.node.onmouseout = function() { mySecondSprite.alpha = 255; }
+
+      document.write(mySprite.position.toString());
 
     	setInterval(update, 33);
     }

@@ -4,7 +4,8 @@
  *
  *	What is SmokeMonster?
  *		SmokeMonster is John Locke, or is he?
- *		But seriously, SmokeMonster.js is a small graphics library based on DOM
+ *		But seriously, SmokeMonster.js is a small graphics library based on DOM.
+ *    This library depends on Modernizr, still using Modernizr is optional.   
  *
  *  Why SmokeMonster?
  *		Well, there had to be some kind of nemesis on the island, right?
@@ -13,11 +14,11 @@
  *		But seriously seriously we are working on ElysionWeb, a HTML5 game framwork
  *		using Canvas, WebGL and SVG/VML with Raphael as its rendering backends.
  *		So want if you want to use the DOM to put together some small simple game
- *		you are doomed if you wanted to use ElysionWeb here. Well, "dommed" is such 
+ *		you are doomed if you wanted to use ElysionWeb here. Well, "doomed" is such
  *    a strong word here. ;)
  *    
  *    This is what SmokeMonster was made for:
- *      It's a tiny web graphics library based on nano.js
+ *      It's a tiny web graphics library based on Document Object Model (DOM).
  *    
  *    You can make quick and simple Javascript games based on DOM. 
  *    But you should definitely give ElysionWeb a try once it's finished.
@@ -26,7 +27,8 @@
  *
  *  How is SmokeMonster?
  *  	Oh, you wanna see how it's done? Here ya go:
- *			You don't need to initialize
+ *			You don't need to initialize anything, just begin creating your
+ *			objects.
  *
  *
  *      var mySprite = new SmokeMonster.Sprite();
@@ -34,12 +36,57 @@
  *      mySprite.position.make(50, 50);
  *      mySprite.draw();
  * 
- *      This will draw mySprite at x: 50 and y: 50.
+ *      This will draw a sprite called mySprite at x: 50 and y: 50. You can
+ *		manipulate additional attributes, like rotation, scaling, opacity, etc.
+ *		Take a look at this:
+ *
+ *		mySprite.alpha = 128;
+ *		mySprite.angle = 22.5;
+ *		mySprite.scale.x = 2.5;
+ *
+ *		Now our sprite is being drawn with at half opacity, rotated 22.5 degrees
+ *		and its witdth scale at factor 2.5.
+ *
+ *
+ *		var myContainer = new SmokeMonster.Container(200, 200);
+ *		myContainer.position.make(60, 60);
+ *		myContainer.backgroundColor.make(255, 255, 0);
+ *		myContainer.borderRadius.make(15, 15);
+ *		myContainer.draw();
+ *
+ *		A container can be actually be everything you want it to be, for example
+ *		a rect, a rounded rect (which it is in this example), or just an object
+ *		for grouping child objects.
+ *		The constructor takes width and height parameter, after that the position
+ *		will be set to Left: 60 | Top: 60, with a yellow background color and
+ *		a barder radius of 15 pixels.
+ *		The draw() method needs to be called on every object to be displayed
+ *		on the page.
+ *
+ *
+ *		Grouping objects:
+ *      The first parameter of an object can also take the parent object, in which
+ *		case the new object will be the child object of the specified object.
+ *		The child object position is then relative, the parent object's position
+ *		is still absolute.
+ *			If you want to get the absolute position of an object, use the
+ *			the method getAbsolutePosition() which will return the position
+ *			as elVector.
+ *
+ *		mySprite = new elSprite(myContainer);
+ *      mySprite.position.make(40, 40);
+ *
+ *		mySprite will now be drawn at Left: 100 | Top: 100.
+ *
+ *
+ *
+ *  So, that were the basics, if you want to know more take a look at the
+ *  examples and read the documentation.
  * 
- *      SmokeMonster.GUI.drawRect(new SmokeMonster.Rect(10, 10, 300, 300));
  * 
- * 
- *  This whole SmokeMonster thing was made in just a few days.
+ *  This whole SmokeMonster thing was made in just a few days. It hasn't been
+ *  a constant development though, just a few hours every now and then.
+ *
  *  There won't probably be much new features after this initial relase, as
  *  we will concentrate our efforts on ElysionWeb. There may be a bug fix release
  *  if users find some nasty bugs.
@@ -71,13 +118,26 @@
 // SmokeMonster namepace - He is coming for you next (I really need to quit on the Lost references, right?)
 if (typeof SmokeMonster == 'undefined') var SmokeMonster = {};
 
-var objectCount = 0;
+var objectCount = 0,
+	  IE = document.all ? true : false;
 
 function createNewUniqueID(objectName)
 {
 	objectCount++;
 	return objectName + "-" + ("00000" + objectCount).slice(-5);
 }
+
+// Format string, something we need quite often
+String.prototype.format = function()
+{
+    var formatted = this;
+    for (var i = 0; i < arguments.length; i++)
+    {
+        var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+        formatted = formatted.replace(regexp, arguments[i]);
+    }
+    return formatted;
+};
 
 /**
  *
@@ -154,7 +214,7 @@ SmokeMonster.Color = function(r, g, b, a)
   
   this.toHex = function()
   {
-    return "#" + this.r.toString(16) + this.g.toString(16) + this.b.toString(16);
+    return "#{0}{1}{2}".format(this.r.toString(16), this.g.toString(16), this.b.toString(16));
   }
 
   this.make = function(newR, newG, newB, newA)
@@ -167,7 +227,7 @@ SmokeMonster.Color = function(r, g, b, a)
   
 };
 
-SmokeMonster.ScaleType =
+SmokeMonster.UnitType =
 {
   stPixel: "px",
   stPercent: "%"
@@ -176,17 +236,24 @@ SmokeMonster.ScaleType =
 SmokeMonster.Vector = function(x, y, z)
 {
   // Public
-  this.type = SmokeMonster.ScaleType.stPixel;
+  this.type = SmokeMonster.UnitType.stPixel;
   
   // Constructor
   this.x = (typeof(x) === "undefined") ? 0.0 : x;
   this.y = (typeof(y) === "undefined") ? 0.0 : y;
   this.z = (typeof(z) === "undefined") ? 0.0 : z;
+
   
   // Vector to String
   this.toString = function()
   {
-    return "X: " + this.x + "; Y: " + this.y + "; Z: " + this.z;
+  	var retString = "";
+
+    if (this.x != 0.0) retString = retString + "X: " + this.x + this.type + "; ";
+    if (this.y != 0.0) retString = retString + "Y: " + this.y + this.type + "; ";
+    if (this.z != 0.0) retString = retString + "Z: " + this.z + this.type + "; ";
+
+    return retString;
   }
   
   this.multiply = function(multi)
@@ -230,9 +297,17 @@ SmokeMonster.Rect = function(x, y, w, h)
     return (2 * this.w + 2 * this.h); 
   }
 
-  this.empty = function()
+  this.isEmpty = function()
   {
   	if ((this.x == 0) && (this.y == 0) && (this.w == 0) && (this.h == 0))
+      return true;
+    else
+      return false;
+  }
+  
+  this.isSameValue = function()
+  {
+    if ((this.x == this.y) && (this.y == this.w) && (this.w == this.h))
       return true;
     else
       return false;
@@ -248,13 +323,38 @@ SmokeMonster.Rect = function(x, y, w, h)
   
 };
 
+SmokeMonster.ShadowType =
+{
+  stDefault: "",
+  stInset: "inset",
+  stInner: "inner"
+}
+
+SmokeMonster.Shadow = function()
+{
+  this.color = new SmokeMonster.Color();
+  this.position = new SmokeMonster.Vector(2, 2);
+  this.blur = 0;
+  this.spread = 0;
+  this.type = SmokeMonster.ShadowType.stDefault;
+  this.visible = false;
+}
+
+SmokeMonster.Border = function()
+{
+  this.width = 0;
+  this.style = "solid";
+  this.color = new SmokeMonster.Color();
+  this.radius = new SmokeMonster.Rect();
+}
+
 // TODO: Change this to module pattern!
 var _Screen = new function()
 {
   this.width = 0;
   this.height = 0;
 
-	this.refresh = function()
+  this.refresh = function()
   {
     if ( typeof( window.innerWidth ) == 'number' )
     {
@@ -283,6 +383,28 @@ SmokeMonster.Screen = _Screen;
 _Screen.refresh(); //< Call _Screen.refresh to set width/height variable
 
 window.onresize = function() { _Screen.refresh(); } //< Also: Refresh values if windows has been resized
+
+
+SmokeMonster.Cursor = new SmokeMonster.Vector();
+
+function updateCursor(event)
+{
+  if (IE)
+  {
+    SmokeMonster.Cursor.x = window.event.clientX + document.body.scrollLeft;
+    SmokeMonster.Cursor.y = window.event.clientY + document.body.scrollTop;
+  }
+  else
+  {
+    SmokeMonster.Cursor.x = event.pageX;
+    SmokeMonster.Cursor.y = event.pageY;
+  }
+}
+
+if (!IE) document.captureEvents(Event.MOUSEMOVE);
+document.onmousemove = updateCursor;
+
+
 
 
 SmokeMonster.Texture = function()
@@ -333,84 +455,537 @@ SmokeMonster.Texture = function()
   }
 };
 
-SmokeMonster.Container = function(parentNode)
-{
-	var styleText = "";
-
-    // Public
-    if (typeof parentNode == "undefined") this.parent = null;
-  	  else this.parent = parentNode;
-
-    this.id = createNewUniqueID("container");
-    this.node = document.createElement("div");
-    this.node.id = this.id;
-
-    SmokeMonster.add('body', this.node);
-
-    this.alpha = 255;
-    this.angle = 0.0;
-    this.position = new SmokeMonster.Vector();
-
-    this.width = 50;
-    this.height = 50;
-
-    this.visible = true;
-
-    this.draw = function()
-    {
-
-    }
-}
-
-SmokeMonster.ImageOffset = function()
+SmokeMonster.ObjectOffset = function()
 {
   this.position = new SmokeMonster.Vector();
-  this.rotation = new SmokeMonster.Vector(50, 50);
-  this.rotation.type = SmokeMonster.ScaleType.stPercent;
+  this.transform = new SmokeMonster.Vector(50, 50);
+  this.transform.type = SmokeMonster.UnitType.stPercent;
+}
+
+SmokeMonster.Container = function(parentNode, arg_w, arg_h)
+{
+  // Private
+  var margin = new SmokeMonster.Vector(),
+      styleText = "",
+      transText = "",
+      anim = new Array(),
+	  hyperlink;
+
+  // Public
+  this.parent = null;
+  this.width = 0;
+  this.height = 0;
+  
+  if (typeof(parentNode) != "undefined")
+  {
+	if (typeof(parentNode) == "number")
+	{
+	  this.width = parentNode;
+	  this.height = arg_w;
+	}
+	else
+	{
+	  this.parent = parentNode;
+	  if (typeof(arg_w) == "number") this.width = arg_w;
+	  if (typeof(arg_h) == "number") this.height = arg_h;
+	}
+  }
+
+  this.id = createNewUniqueID("container");
+
+  this.node = document.createElement("div");
+  this.node.id = this.id;
+  
+  SmokeMonster.add('body', this.node);
+
+  this.alpha = 255;
+  this.angle = 0.0;
+  this.backgroundColor = new SmokeMonster.Color(0, 0, 0, 0);
+  this.border = new SmokeMonster.Border();
+  this.cursor = "default";
+  
+  this.offset = new SmokeMonster.ObjectOffset();
+  this.position = new SmokeMonster.Vector();
+  this.scale = new SmokeMonster.Vector(1.0, 1.0);
+  this.skew = new SmokeMonster.Vector(0.0, 0.0);
+  this.shadow = new SmokeMonster.Shadow();
+
+  this.href = "";
+  
+  
+  this.extraParams = ""; //< Will be inserted at the end after all other css properties have been applied
+  this.extraTransform = ""; //< Will be inserted in transform: computedProperties extraTransform ; ...
+
+  this.visible = true;
+    
+  this.className = "";
+
+// Events
+  this.click = function(evtClick)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('click', evtClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onclick', evtClick);
+	}
+  }
+  
+  ///// Click-Event for hyperlinks
+  this.click(function (event)
+  {
+    if (hyperlink != "")
+	  location.href = hyperlink;
+  });
+  ////
+  
+  this.dblclick = function(evtDblClick)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('dblclick', evtDblClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('ondblclick', evtDblClick);
+	}
+  }
+  
+  this.mousedown = function(evtMouseDown)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mousedown', evtMouseDown, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmousedown', evtMouseDown);
+	}
+  }
+  
+  this.mousemove = function(evtMouseMove)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mousemove', evtClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmousemove', evtClick);
+	}
+  }
+  
+  this.mouseout = function(evtMouseOut)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseout', evtMouseOut, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseout', evtMouseOut);
+	}
+  }
+  
+  this.mouseover = function(evtMouseOver)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseover', evtMouseOver, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseover', evtMouseOver);
+	}
+  }
+  
+  this.mouseup = function(evtMouseUp)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseup', evtMouseUp, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseup', evtMouseUp);
+	}
+  }
+  
+  this.hover = function(evtMouseOver, evtMouseOut)
+  {
+	this.mouseover(evtMouseOver);
+	this.mouseout(evtMouseOut);
+  }
+  
+  this.unclick = function(evtClick)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('click', evtClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onclick', evtClick);
+	}
+  }
+  
+  this.undblclick = function(evtDblClick)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('dblclick', evtDblClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('ondblclick', evtDblClick);
+	}
+  }
+  
+  this.unmousedown = function(evtMouseDown)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mousedown', evtMouseDown, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmousedown', evtMouseDown);
+	}
+  }
+  
+  this.unmousemove = function(evtMouseMove)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mousemove', evtClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmousemove', evtClick);
+	}
+  }
+  
+  this.unmouseout = function(evtMouseOut)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseout', evtMouseOut, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseout', evtMouseOut);
+	}
+  }
+  
+  this.unmouseover = function(evtMouseOver)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseover', evtMouseOver, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseover', evtMouseOver);
+	}
+  }
+  
+  this.unmouseup = function(evtMouseUp)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseup', evtMouseUp, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseup', evtMouseUp);
+	}
+  }
+  
+  this.unhover = function(evtMouseOver, evtMouseOut)
+  {
+	this.unmouseover(evtMouseOver);
+	this.unmouseout(evtMouseOut);
+  }
+  
+  // Animator
+  this.addAnimation = function(property, duration, effect, delay)
+  {
+    if (typeof(effect) == "undefined") effect = "linear";
+    if (typeof(delay) == "undefined") delay = 0;
+
+    var tprop = "";
+
+    switch (property)
+    {
+      case "alpha": case "opacity": tprop = "opacity"; break;
+      case "position.x": case "left": tprop = "left"; break;
+      case "position.y": case "top": tprop = "top"; break;
+      case "position.z": tprop = "z-index"; break;
+      case "width": tprop = "width"; break;
+      case "height": tprop = "height"; break;
+      case "all": tprop = "all"; break;
+      default: tprop = property; break;
+    }
+
+	for (var i = 0; i < this.getAnimCount(); i++)
+	{
+	  if (anim[i] == "{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay))
+		return;
+	}
+	anim.push("{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay));
+  }
+  
+  this.removeAnimation = function(property, duration, effect, delay)
+  {
+	for (var i = 0; i < this.getAnimCount(); i++)
+	{
+	  if (anim[i] == "{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay))
+	  {
+		anim.splice(i, 1);
+		return;
+	  }
+	}
+  }
+
+  this.getAnimCount = function()
+  {
+	return anim.length;
+  }
+  
+  this.resetAnimation = function()
+  {
+  	anim.splice(0, this.getAnimCount());
+  }
+
+  this.getAbsolutePosition = function()
+  {
+  	if (this.parent == null)
+      return this.position;
+    else
+  	  return new SmokeMonster.Vector(this.position.x + parent.getAbsolutePosition().x, this.position.y + parent.getAbsolutePosition().y, this.position.z + parent.getAbsolutePosition().z);
+  }
+    
+  this.draw = function()
+  {
+    // Reset style to reapply style
+    if (styleText != "") styleText = "";
+    if (transText != "") transText = "";
+
+
+    if (!this.visible) styleText += "display:none;";
+	
+	if (this.href != "") 
+	{
+	  this.cursor = "pointer";
+	  hyperlink = this.href;
+	}
+	if (this.cursor != "default") styleText += "cursor: " + this.cursor + ";";
+	
+	if (this.backgroundColor.a != 0)
+	{
+	  if (this.backgroundColor.a == 255)
+	    styleText += "background: {0} url({1});".format(this.backgroundColor.toHex(), this.texture.src);
+	  else
+	    {
+	      if (Modernizr.rgba)
+          styleText += "background: {0} url({1});".format(this.backgroundColor.get(), this.texture.src);
+        else
+          styleText += "background: {0} url({1});".format(this.backgroundColor.toHex(), this.texture.src);
+      }
+	}
+
+    if ((Modernizr.opacity) && (this.alpha != 255))
+      styleText += "filter:alpha(opacity={0}); -moz-opacity:{1}; -khtml-opacity:{1}; opacity:{1}; ".format(this.alpha, this.alpha / 255);
+	  
+    if ((this.position.x != 0) || (this.position.y != 0))
+    {
+      if (this.parent)
+      	styleText += "position:relative;";
+      else
+      	styleText += "position:absolute;";
+
+      if (this.position.x != 0)
+      {
+        switch (this.position.type)
+        {
+          case "px":
+          {
+            if (this.offset.position.x != 0)
+            {
+              switch (this.offset.position.type)
+              {
+                case "px":
+              	  margin.x = this.offset.position.x; break;
+                case "%":
+                  margin.x = (this.offset.position.x / 100) * (this.width * this.scale.x); break;
+              }
+            }
+
+            break;
+          }
+          case "%":
+          {
+            if (this.offset.position.x != 0)
+            {
+              switch (this.offset.position.type)
+              {
+                case "px":
+              	  margin.x = (this.offset.position.x / _Screen.width) * 100; break;
+                case "%":
+                  margin.x = (((this.offset.position.x / 100) * this.width) / _Screen.width) * 100; break;
+              }
+            }
+
+            break;
+          }
+        }
+
+        var posx = (margin.x != 0) ? (this.position.x - margin.x) : this.position.x;
+        styleText += "left: {0}{1};".format(posx, this.position.type);
+      }
+      if (this.position.y != 0)
+      {
+        switch (this.position.type)
+        {
+          case "px":
+          {
+            if (this.offset.position.y != 0)
+            {
+              switch (this.offset.position.type)
+              {
+                case "px":
+              	  margin.y = this.offset.position.y; break;
+                case "%":
+                  margin.y = (this.offset.position.y / 100) * (this.height * this.scale.y); break;
+              }
+            }
+
+            break;
+          }
+          case "%":
+          {
+            if (this.offset.position.y != 0)
+            {
+              switch (this.offset.position.type)
+              {
+                case "px":
+              	  margin.y = (this.offset.position.y / _Screen.height) * 100; break;
+                case "%":
+                  margin.y = (((this.offset.position.y / 100) * this.height) / _Screen.height) * 100; break;
+              }
+            }
+
+            break;
+          }
+        }
+
+        var posy = (margin.y != 0) ? (this.position.y - margin.y) : this.position.y;
+        styleText += "top: {0}{1};".format(posy, this.position.type);
+      }
+    }
+
+    if (this.position.z != 0)
+      	styleText += "z-index:{0};".format(this.position.z);
+	
+	if ((Modernizr.boxshadow) && (this.shadow.visible))
+      styleText += "-moz-box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6}; -webkit-box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6}; box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6};".format(this.shadow.type, this.shadow.position.x, this.shadow.position.type, this.shadow.position.y, this.shadow.blur, this.shadow.spread, this.shadow.color.toHex());
+
+	if (this.border.width != 0)
+	  styleText += "border:{0}px {1} {2};".format(this.border.width, this.border.style, this.border.color.toHex());
+	  	  
+
+    if ((Modernizr.borderradius) && (!this.border.radius.isEmpty()))
+	{
+	  if (this.border.radius.isSameValue())
+	    styleText += "border-radius: {0}{1}; -webkit-border-radius: {0}{1}; -moz-border-radius: {0}{1};".format(this.border.radius.x, "px");
+	  else
+	    styleText += "border-radius: {0}{1} {2}{1} {3}{1} {4}{1}; -webkit-border-radius: {0}{1} {2}{1} {3}{1} {4}{1}; -moz-border-radius: {0}{1} {2}{1} {3}{1} {4}{1};".format(this.border.radius.x, "px", this.border.radius.y, this.border.radius.w, this.border.radius.h);
+	}
+
+
+    // Transform properties
+    // Those are being handled differently, they need to be in this form: transfrom: property1 property2 property3 etc.
+
+    if (Modernizr.csstransforms)
+    {
+      if ((this.angle / 360) != 0)
+      transText += "rotate({0}deg)".format(this.angle);
+
+    	switch (this.offset.transform.type)
+    	{
+    	  case "%": styleText += "-moz-transform-origin: {0}{1} {2}{1}; -webkit-transform-origin: {0}{1} {2}{1}; -o-transform-origin: {0}{1} {2}{1}; -ms-transform-origin: {0}{1} {2}{1}; -transform-origin: {0}{1} {2}{1};".format((this.offset.transform.x / 100) * this.width, "px", (this.offset.transform.y / 100) * this.height); break;
+    	  default: styleText += "-moz-transform-origin: {0}{1} {2}{1}; -webkit-transform-origin: {0}{1} {2}{1}; -o-transform-origin: {0}{1} {2}{1}; -ms-transform-origin: {0}{1} {2}{1}; -transform-origin: {0}{1} {2}{1};".format(this.offset.transform.x, this.offset.transform.type, this.offset.transform.y); break;
+    	}
+
+      if (this.skew.x != 0) transText += " skewX({0}deg)".format(this.skew.x);
+      if (this.skew.y != 0) transText += " skewY({0}deg)".format(this.skew.y);
+
+      if ((this.scale.x != 0.0) && (this.scale.x != 1.0)) transText += " scaleX({0})".format(this.scale.x);
+      if ((this.scale.y != 0.0) && (this.scale.y != 1.0)) transText += " scaleY({0})".format(this.scale.x);
+
+      if ((transText != "") || (this.extraTransform != ""))
+      	styleText += "-moz-transform: {0} {1}; -webkit-transform: {0} {1}; -o-transform: {0} {1}; -ms-transform: {0} {1}; transform: {0} {1};".format(transText, this.extraTransform);
+    }
+
+    // Set width & height
+    styleText += "min-width: {0}px; min-height: {1}px; max-width: {0}px; max-height: {1}px; width: {0}px; height: {1}px;".format(this.width + this.border.width, this.height + this.border.width);
+
+      // Add animation if any
+    if ((Modernizr.csstransitions) && (this.getAnimCount() > 0))
+      styleText += "transition: {0} -webkit-transition: {0} -moz-transition: {0} -o-transition: {0} -ms-transition: {0}".format(anim.join(",") + ";");
+
+    // Add class name if any
+    if (this.className != "") this.node.className = this.className;
+
+    // Add extra parameters without checking if they are valid, that's how we roll :D
+    if (this.extraParams != "") styleText += this.extraParams;
+
+	
+    // Apply style sheet to node
+    this.node.style.cssText = styleText;
+  }
 }
 
 SmokeMonster.Sprite = function(parentNode)
 {
   // Private
-  var styleText = "";
+  var margin = new SmokeMonster.Vector(),
+      styleText = "",
+      transText = "",
+      anim = new Array(),
+	    hyperlink;
 
   // Public
-  if (typeof parentNode == "undefined") this.parent = null;
-  	else this.parent = parentNode;
+  this.parent = (typeof(parentNode) == "undefined") ? null : parentNode;
 
   this.id = createNewUniqueID("sprite");
 
   this.node = document.createElement("div");
-  this.node_img = document.createElement("img");
-
   this.node.id = this.id;
-  this.node_img.id = "img-" + this.id;
-
-  SmokeMonster.add(this.node, this.node_img);
+  
   SmokeMonster.add('body', this.node);
-
 
   this.alpha = 255;
   this.angle = 0.0;
+  this.backgroundColor = new SmokeMonster.Color(0, 0, 0, 0);
+  this.border = new SmokeMonster.Border();
   this.clipRect = new SmokeMonster.Rect();
-  this.offset = new SmokeMonster.ImageOffset();
+  this.cursor = "default";
+  
+  this.offset = new SmokeMonster.ObjectOffset();
   this.position = new SmokeMonster.Vector();
   this.scale = new SmokeMonster.Vector(1.0, 1.0);
-  this.scaleClipRect = true;
+  this.scaleClipRect = false;
   this.skew = new SmokeMonster.Vector(0.0, 0.0);
+  this.shadow = new SmokeMonster.Shadow();
   this.texture = new SmokeMonster.Texture();
+
+  this.href = "";
+  
+  
+  this.extraParams = ""; //< Will be inserted at the end after all other css properties have been applied
+  this.extraTransform = ""; //< Will be inserted in transform: computedProperties extraTransform ; ...
 
   this.width;
   this.height;
 
   this.visible = true;
+  
+  
+  this.className = "";
 
   
   this.loadFromFile = function(aFilename, aClipRect)
   {
     this.texture.loadFromFile(aFilename);
-
-    this.node_img.src = this.texture.src;
 
     this.width = this.texture.width;
     this.height = this.texture.height;
@@ -429,177 +1004,443 @@ SmokeMonster.Sprite = function(parentNode)
     if (typeof aClipRect != "undefined")
     	this.clipRect = aClipRect;
   }
+
+  // Events
+  this.click = function(evtClick)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('click', evtClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onclick', evtClick);
+	}
+  }
   
+  ///// Click-Event for hyperlinks
+  this.click(function (event)
+  {
+    if (hyperlink != "")
+	  location.href = hyperlink;
+  });
+  ////
+  
+  this.dblclick = function(evtDblClick)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('dblclick', evtDblClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('ondblclick', evtDblClick);
+	}
+  }
+  
+  this.mousedown = function(evtMouseDown)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mousedown', evtMouseDown, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmousedown', evtMouseDown);
+	}
+  }
+  
+  this.mousemove = function(evtMouseMove)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mousemove', evtClick, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmousemove', evtClick);
+	}
+  }
+  
+  this.mouseout = function(evtMouseOut)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseout', evtMouseOut, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseout', evtMouseOut);
+	}
+  }
+  
+  this.mouseover = function(evtMouseOver)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseover', evtMouseOver, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseover', evtMouseOver);
+	}
+  }
+  
+  this.mouseup = function(evtMouseUp)
+  {
+	if (this.node.addEventListener)
+		this.node.addEventListener('mouseup', evtMouseUp, false);
+	else
+	{
+		if (this.node.attachEvent)
+			this.node.attachEvent('onmouseup', evtMouseUp);
+	}
+  }
+  
+  this.hover = function(evtMouseOver, evtMouseOut)
+  {
+	this.mouseover(evtMouseOver);
+	this.mouseout(evtMouseOut);
+  }
+  
+  this.unclick = function(evtClick)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('click', evtClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onclick', evtClick);
+	}
+  }
+  
+  this.undblclick = function(evtDblClick)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('dblclick', evtDblClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('ondblclick', evtDblClick);
+	}
+  }
+  
+  this.unmousedown = function(evtMouseDown)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mousedown', evtMouseDown, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmousedown', evtMouseDown);
+	}
+  }
+  
+  this.unmousemove = function(evtMouseMove)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mousemove', evtClick, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmousemove', evtClick);
+	}
+  }
+  
+  this.unmouseout = function(evtMouseOut)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseout', evtMouseOut, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseout', evtMouseOut);
+	}
+  }
+  
+  this.unmouseover = function(evtMouseOver)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseover', evtMouseOver, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseover', evtMouseOver);
+	}
+  }
+  
+  this.unmouseup = function(evtMouseUp)
+  {
+	if (this.node.removeEventListener)
+		this.node.removeEventListener('mouseup', evtMouseUp, false);
+	else
+	{
+		if (this.node.detachEvent)
+			this.node.detachEvent('onmouseup', evtMouseUp);
+	}
+  }
+  
+  this.unhover = function(evtMouseOver, evtMouseOut)
+  {
+	this.unmouseover(evtMouseOver);
+	this.unmouseout(evtMouseOut);
+  }
+  
+  // Animator
+  this.addAnimation = function(property, duration, effect, delay)
+  {
+    if (typeof(effect) == "undefined") effect = "linear";
+    if (typeof(delay) == "undefined") delay = 0;
+
+    var tprop = "";
+
+    switch (property)
+    {
+      case "alpha": case "opacity": tprop = "opacity"; break;
+      case "position.x": case "left": tprop = "left"; break;
+      case "position.y": case "top": tprop = "top"; break;
+      case "position.z": tprop = "z-index"; break;
+      case "width": tprop = "width"; break;
+      case "height": tprop = "height"; break;
+      case "all": tprop = "all"; break;
+      default: tprop = property; break;
+    }
+
+	for (var i = 0; i < this.getAnimCount(); i++)
+	{
+	  if (anim[i] == "{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay))
+		return;
+	}
+	anim.push("{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay));
+  }
+  
+  this.removeAnimation = function(property, duration, effect, delay)
+  {
+	for (var i = 0; i < this.getAnimCount(); i++)
+	{
+	  if (anim[i] == "{0} {1}ms {2} {3}ms".format(tprop, duration, effect, delay))
+	  {
+		anim.splice(i, 1);
+		return;
+	  }
+	}
+  }
+
+  this.getAnimCount = function()
+  {
+	return anim.length;
+  }
+  
+  this.resetAnimation = function()
+  {
+  	anim.splice(0, this.getAnimCount());
+  }
+
+  this.getAbsolutePosition = function()
+  {
+  	if (this.parent == null)
+      return this.position;
+    else
+  	  return new SmokeMonster.Vector(this.position.x + parent.getAbsolutePosition().x, this.position.y + parent.getAbsolutePosition().y, this.position.z + parent.getAbsolutePosition().z);
+  }
+
   this.draw = function()
   {
     if (!this.texture.isLoaded()) return;
-    
-    // If someone tries to trick the Smoke monster and change the width or height
-    // the smoke monster tricks you and _actually_ scales the image... Muhahaha
-    // (width and height are usually supposed to be read-only properties)
-    if (this.width != this.texture.width)
-    {
-      if (this.width > 0) this.scale.x = (this.width / this.texture.width);
-      this.width = this.texture.width; //< Smoke Monster tricks you again and resets width :)
-    }
-    if (this.height != this.texture.height)
-    {
-      if (this.height > 0) this.scale.y = (this.height / this.texture.height);
-      this.height = this.texture.height; //< Smoke Monster tricks you again and resets height :)
-    }
-    // Btw: It is nice to be able to personify a piece of software
-
+	
+	  this.width = (this.clipRect.w != 0) ? this.clipRect.w : this.texture.width;
+	  this.height = (this.clipRect.h != 0) ? this.clipRect.h : this.texture.height;
 
     // Reset style to reapply style
     if (styleText != "") styleText = "";
-
-    if (!this.visible) styleText = styleText + "display:none;";
-
-    if (this.alpha != 255)
-      styleText = styleText + "filter:alpha(opacity=" + this.alpha + "); -moz-opacity:" + (this.alpha / 255) + "; -khtml-opacity:" + (this.alpha / 255) + "; opacity:" + (this.alpha / 255) + "; ";
-
-    if ((this.angle / 360) != 0)
-    {
-      styleText = styleText + "-webkit-transform: rotate(" + this.angle + "deg); -moz-transform: rotate(" + this.angle + "deg); -o-transform: rotate(" + this.angle + "); rotation:" + this.angle + "deg;";
+    if (transText != "") transText = "";
 
 
-      if ((this.offset.rotation.type != "%") && (this.offset.rotation.x != 50) && (this.offset.rotation.y != 50))
-      {
-        switch (this.offset.rotation.type)
-        {
-          case "%":
-          {
-            styleText = styleText + "-moz-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-webkit-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-o-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;" + "-transform-origin: " + (this.offset.rotation.x / 100) * this.width + "px " + (this.offset.rotation.y / 100) * this.height + "px;";
-            break;
-          }
-          default:
-          {
-            styleText = styleText + "-moz-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-webkit-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-o-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;" + "-transform-origin: " + this.offset.rotation.x + "px " + this.offset.rotation.y + "px;";
-            break;
-          }
-        }
-        
-      }
-    }
-    
-    if ((this.skew.x != 0) || (this.skew.y != 0))
-      styleText = styleText + "-moz-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-webkit-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-o-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);-transform:skewX(" + this.skew.x + "deg) skewY(" + this.skew.y + "deg);"; 
+    if (!this.visible) styleText += "display:none;";
+	
+  	if (this.href != "") 
+  	{
+  	  this.cursor = "pointer";
+  	  hyperlink = this.href;
+  	}
+  	
+  	if (this.cursor != "default") styleText += "cursor: " + this.cursor + ";";
+  	
+  	if (this.backgroundColor.a != 0)
+  	{
+  	  if (this.backgroundColor.a == 255)
+  	    styleText += "background: {0} url({1});".format(this.backgroundColor.toHex(), this.texture.src);
+  	  else
+	    {
+	      if (Modernizr.rgba)
+	        styleText += "background: {0} url({1});".format(this.backgroundColor.get(), this.texture.src);
+	      else
+	        styleText += "background: {0} url({1});".format(this.backgroundColor.toHex(), this.texture.src);
+	    }
+  	}
+  	else
+  	  styleText += "background: url({0});".format(this.texture.src);
 
-
+    if ((Modernizr.opacity) && (this.alpha != 255))
+      styleText += "filter:alpha(opacity={0}); -moz-opacity:{1}; -khtml-opacity:{1}; opacity:{1}; ".format(this.alpha, this.alpha / 255);
+  	  
     if ((this.position.x != 0) || (this.position.y != 0))
     {
       if (this.parent)
-      	styleText = styleText + "position:relative;";
+      	styleText += "position:relative;";
       else
-      	styleText = styleText + "position:absolute;";
+      	styleText += "position:absolute;";
 
       if (this.position.x != 0)
       {
         switch (this.position.type)
         {
-          case SmokeMonster.ScaleType.stPixel:
+          case "px":
           {
-            var margin = 0;
-
             if (this.offset.position.x != 0)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.ScaleType.stPixel:
-              	  margin = this.offset.position.x; break;
-                case SmokeMonster.ScaleType.stPercent:
-                  margin = (this.offset.position.x / 100) * (this.width * this.scale.x); break;
+                case "px":
+              	  margin.x = this.offset.position.x; break;
+                case "%":
+                  margin.x = (this.offset.position.x / 100) * (this.width * this.scale.x); break;
               }
             }
 
-            styleText = styleText + "left:" + (this.position.x - margin) + "px;";
             break;
           }
-          case SmokeMonster.ScaleType.stPercent:
+          case "%":
           {
-            var margin = 0;
-
             if (this.offset.position.x != 0)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.ScaleType.stPixel:
-              	  margin = (this.offset.position.x / _Screen.width) * 100; break;
-                case SmokeMonster.ScaleType.stPercent:
-                  margin = (((this.offset.position.x / 100) * this.width) / _Screen.width) * 100; break;
+                case "px":
+              	  margin.x = (this.offset.position.x / _Screen.width) * 100; break;
+                case "%":
+                  margin.x = (((this.offset.position.x / 100) * this.width) / _Screen.width) * 100; break;
               }
             }
-            
-            styleText = styleText + "left:" + (this.position.x - margin) + "%;";
+
             break;
           }
         }
+
+        var posx = (margin.x != 0) ? (this.position.x - margin.x) : this.position.x;
+        styleText += "left: {0}{1};".format(posx, this.position.type);
       }
       if (this.position.y != 0)
       {
         switch (this.position.type)
         {
-          case SmokeMonster.ScaleType.stPixel:
+          case "px":
           {
-            var margin = 0;
-
             if (this.offset.position.y != 0)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.ScaleType.stPixel:
-              	  margin = this.offset.position.y; break;
-                case SmokeMonster.ScaleType.stPercent:
-                  margin = (this.offset.position.y / 100) * (this.height * this.scale.y); break;
+                case "px":
+              	  margin.y = this.offset.position.y; break;
+                case "%":
+                  margin.y = (this.offset.position.y / 100) * (this.height * this.scale.y); break;
               }
             }
 
-            styleText = styleText + "top:" + (this.position.y - margin) + "px;";
             break;
           }
-          case SmokeMonster.ScaleType.stPercent:
+          case "%":
           {
-            var margin = 0;
-
             if (this.offset.position.y != 0)
             {
               switch (this.offset.position.type)
               {
-                case SmokeMonster.ScaleType.stPixel:
-              	  margin = (this.offset.position.y / _Screen.height) * 100; break;
-                case SmokeMonster.ScaleType.stPercent:
-                  margin = (((this.offset.position.y / 100) * this.height) / _Screen.height) * 100; break;
+                case "px":
+              	  margin.y = (this.offset.position.y / _Screen.height) * 100; break;
+                case "%":
+                  margin.y = (((this.offset.position.y / 100) * this.height) / _Screen.height) * 100; break;
               }
             }
 
-            styleText = styleText + "top:" + (this.position.y - margin) + "%;";
             break;
           }
         }
+
+        var posy = (margin.y != 0) ? (this.position.y - margin.y) : this.position.y;
+        styleText += "top: {0}{1};".format(posy, this.position.type);
       }
     }
+
     if (this.position.z != 0)
-      	styleText = styleText + "z-index:" + this.position.z + "; ";
-    if (!this.clipRect.empty())
+      	styleText += "z-index:{0};".format(this.position.z);
+    if (!this.clipRect.isEmpty())
     {
     	if (this.scaleClipRect)
-        	styleText = styleText + "clip:rect(" + this.clipRect.y * this.scale.y + "px, " + (this.clipRect.w + this.clipRect.x) * this.scale.x + "px, " + (this.clipRect.h + this.clipRect.y) * this.scale.y + "px, " + this.clipRect.x * this.scale.x + "px); ";
+        	styleText += "clip:rect({0}px, {1}px, {2}px, {3}px); ".format(this.clipRect.y * this.scale.y, (this.clipRect.w + this.clipRect.x) * this.scale.x, (this.clipRect.h + this.clipRect.y) * this.scale.y, this.clipRect.x * this.scale.x);
         else
-    		styleText = styleText + "clip:rect(" + this.clipRect.y + "px, " + (this.clipRect.w + this.clipRect.x) + "px, " + (this.clipRect.h + this.clipRect.y) + "px, " + this.clipRect.x + "px); ";
+    		styleText += "clip:rect({0}px, {1}px, {2}px, {3}px); ".format(this.clipRect.y, (this.clipRect.w + this.clipRect.x), (this.clipRect.h + this.clipRect.y), this.clipRect.x);
     }
+	
+	if ((Modernizr.boxshadow) && (this.shadow.visible))
+      styleText += "-moz-box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6}; -webkit-box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6}; box-shadow: {0} {1}{2} {3}{2} {4}{2} {5}{2} {6};".format(this.shadow.type, this.shadow.position.x, this.shadow.position.type, this.shadow.position.y, this.shadow.blur, this.shadow.spread, this.shadow.color.toHex());
 
+	if (this.border.width != 0)
+	  styleText += "border:{0}px {1} {2};".format(this.border.width, this.border.style, this.border.color.toHex());
+	  	  
+	if ((Modernizr.borderradius) && (!this.border.radius.isEmpty()))
+	{
+	  if (this.border.radius.isSameValue())
+	    styleText += "border-radius: {0}{1}; -webkit-border-radius: {0}{1}; -moz-border-radius: {0}{1};".format(this.border.radius.x, "px");
+	  else
+	    styleText += "border-radius: {0}{1} {2}{1} {3}{1} {4}{1}; -webkit-border-radius: {0}{1} {2}{1} {3}{1} {4}{1}; -moz-border-radius: {0}{1} {2}{1} {3}{1} {4}{1};".format(this.border.radius.x, "px", this.border.radius.y, this.border.radius.w, this.border.radius.h);
+	} 
+
+
+    // Transform properties
+    // Those are being handled differently, they need to be in this form: transfrom: property1 property2 property3 etc.
+
+    if (Modernizr.csstransforms)
+    {
+      if ((this.angle / 360) != 0)
+      transText += "rotate({0}deg)".format(this.angle);
+	
+    	switch (this.offset.transform.type)
+    	{
+    	  case "%": styleText += "-moz-transform-origin: {0}{1} {2}{1}; -webkit-transform-origin: {0}{1} {2}{1}; -o-transform-origin: {0}{1} {2}{1}; -ms-transform-origin: {0}{1} {2}{1}; -transform-origin: {0}{1} {2}{1};".format((this.offset.transform.x / 100) * this.width, "px", (this.offset.transform.y / 100) * this.height); break;
+    	  default: styleText += "-moz-transform-origin: {0}{1} {2}{1}; -webkit-transform-origin: {0}{1} {2}{1}; -o-transform-origin: {0}{1} {2}{1}; -ms-transform-origin: {0}{1} {2}{1}; -transform-origin: {0}{1} {2}{1};".format(this.offset.transform.x, this.offset.transform.type, this.offset.transform.y); break;
+    	}
+  
+      if (this.skew.x != 0) transText += " skewX({0}deg)".format(this.skew.x);
+      if (this.skew.y != 0) transText += " skewY({0}deg)".format(this.skew.y);
+  
+      if ((this.scale.x != 0.0) && (this.scale.x != 1.0)) transText += " scaleX({0})".format(this.scale.x);
+      if ((this.scale.y != 0.0) && (this.scale.y != 1.0)) transText += " scaleY({0})".format(this.scale.x);
+  
+      if ((transText != "") || (this.extraTransform != ""))
+      	styleText += "-moz-transform: {0} {1}; -webkit-transform: {0} {1}; -o-transform: {0} {1}; -ms-transform: {0} {1}; transform: {0} {1};".format(transText, this.extraTransform);
+    }
+    
+    // Set width & height
+    styleText += "min-width: {0}px; min-height: {1}px; max-width: {0}px; max-height: {1}px; width: {0}px; height: {1}px;".format(this.width + this.border.width, this.height + this.border.width);
+      
+      // Add animation if any
+    if ((Modernizr.csstransitions) && (this.getAnimCount() > 0))
+      styleText += "transition: {0} -webkit-transition: {0} -moz-transition: {0} -o-transition: {0} -ms-transition: {0}".format(anim.join(",") + ";");
+
+    // Add class name if any
+    if (this.className != "") this.node.className = this.className;
+
+    // Add extra parameters without checking if they are valid, that's how we roll :D
+    if (this.extraParams != "") styleText += this.extraParams;
+
+	
+    // Apply style sheet to node
     this.node.style.cssText = styleText;
-    //alert(this.node.style.cssText);
-
-    this.node_img.width = (this.texture.width * this.scale.x);
-    this.node_img.height = (this.texture.height * this.scale.y);
-
-
   }
 };
 
 SmokeMonster.Label = function(parentNode)
 {
+  // Private
+  var styleText = "";
+
+  // Public
+  this.parent = (typeof(parentNode) == "undefined") ? null : parentNode;
+
   this.node = document.createElement('div');
   this.color = new SmokeMonster.Color();
   this.caption = "";
@@ -611,17 +1452,16 @@ SmokeMonster.Label = function(parentNode)
   }
 };
 
-SmokeMonster.ButtonType =
-{
-  btRegular: 0,
-  btRounded: 1,
-  btGraphical: 2,
-  btImage: 3
-}
 
 SmokeMonster.Button = function(parentNode)
 {
-  this.buttonType = SmokeMonster.ButtonType.btGraphical;
+  this.container = new SmokeMonster.Container();
+  this.label = new SmokeMonster.Label();
+  
+  this.parent = null;
+  (typeof(parentNode) == "undefined") ? null : parentNode;
+
+
   
   this.node = document.createElement('div');
   
@@ -631,3 +1471,9 @@ SmokeMonster.Button = function(parentNode)
     
   }
 };
+
+SmokeMonster.ImageButton = function(parentNode)
+{
+  
+  
+}

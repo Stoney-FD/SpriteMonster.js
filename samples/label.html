@@ -1,0 +1,74 @@
+<!doctype html>  
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Smokey Test</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="smokemonster.js"></script>
+
+</head>
+
+<body onload="init();">
+  <script>
+  	var mySprite = new SmokeMonster.Sprite();
+  	var mySecondSprite = new SmokeMonster.Sprite();
+    var spAlpha = 255;
+    var spAngle = 0;
+
+  	function init()
+    {
+      
+    	mySprite.loadFromFile("images/freckles.png");
+        //mySprite.position.type = SmokeMonster.PositionType.ptPercent;
+        //mySprite.offset.position.type = SmokeMonster.PositionType.ptPercent;
+        mySprite.offset.position.type = "%";
+        mySprite.offset.position.make(50, 50);
+        
+        
+        mySprite.offset.rotation.type = "%";
+        mySprite.offset.rotation.make(0, 0);
+        
+        mySprite.position.type = SmokeMonster.ScaleType.stPercent;
+        mySprite.position.make(50, 50);
+        //mySprite.scale.x = 1.33;
+        //mySprite.visible = false;
+        //mySprite.clipRect.make(0, 32, 120, 50);
+        //mySprite.alpha = spAlpha;
+        mySprite.node.onclick = function() { alert(SmokeMonster.Screen.width); }
+
+      mySprite.position.z = 1;
+
+
+      mySecondSprite.loadFromFile("images/freckles.png");
+      mySecondSprite.position.make(150, 150);
+      //mySecondSprite.skew.y = 22.5;
+      mySecondSprite.shadow.visible = true;
+      mySecondSprite.node.onmouseover = function() { mySecondSprite.alpha = 128; }
+      mySecondSprite.node.onmouseout = function() { mySecondSprite.alpha = 255; }
+
+    	setInterval(update, 33);
+    }
+
+    function update()
+    {
+    	spAlpha = spAlpha - 1;
+        spAngle = spAngle + 1;
+        
+        if (spAlpha < 0) spAlpha = 255;
+        
+        mySprite.alpha = spAlpha;
+        mySprite.angle = spAngle;
+
+    	mySprite.draw();
+    	mySecondSprite.draw();
+        //spAlpha = spAlpha - 1;
+
+    }
+
+  </script>
+</body>
+</html>
