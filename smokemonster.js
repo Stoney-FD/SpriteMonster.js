@@ -48,7 +48,9 @@
  *		and its witdth scale at factor 2.5.
  *
  *
- *		var myContainer = new SmokeMonster.Container(200, 200);
+ *		var myContainer = new SmokeMonster.Container();
+ *		myContainer.width = 50;
+ *		myContainer.height = 50;
  *		myContainer.position.make(60, 60);
  *		myContainer.backgroundColor.make(255, 255, 0);
  *		myContainer.borderRadius.make(15, 15);
@@ -382,7 +384,13 @@ var _Screen = new function()
 SmokeMonster.Screen = _Screen;
 _Screen.refresh(); //< Call _Screen.refresh to set width/height variable
 
-window.onresize = function() { _Screen.refresh(); } //< Also: Refresh values if windows has been resized
+if (window.addEventListener)       //< Also: Refresh values if windows has been resized
+	window.addEventListener('resize', function (event) { _Screen.refresh(); } , false);
+else
+{
+	if (window.attachEvent)
+		window.attachEvent('onresize', function (event) { _Screen.refresh(); } );
+}
 
 
 SmokeMonster.Cursor = new SmokeMonster.Vector();
@@ -462,7 +470,7 @@ SmokeMonster.ObjectOffset = function()
   this.transform.type = SmokeMonster.UnitType.stPercent;
 }
 
-SmokeMonster.Container = function(parentNode, arg_w, arg_h)
+SmokeMonster.Container = function(parentNode)
 {
   // Private
   var margin = new SmokeMonster.Vector(),
@@ -473,8 +481,8 @@ SmokeMonster.Container = function(parentNode, arg_w, arg_h)
 
   // Public
   this.parent = null;
-  this.width = 0;
-  this.height = 0;
+  this.width = 100;
+  this.height = 75;
   
   if (typeof(parentNode) != "undefined")
   {
@@ -509,6 +517,8 @@ SmokeMonster.Container = function(parentNode, arg_w, arg_h)
   this.scale = new SmokeMonster.Vector(1.0, 1.0);
   this.skew = new SmokeMonster.Vector(0.0, 0.0);
   this.shadow = new SmokeMonster.Shadow();
+
+  this.sticky = false;
 
   this.href = "";
   
@@ -787,8 +797,8 @@ SmokeMonster.Container = function(parentNode, arg_w, arg_h)
 	  
     if ((this.position.x != 0) || (this.position.y != 0))
     {
-      if (this.parent)
-      	styleText += "position:relative;";
+      if (this.sticky)
+      	styleText += "position:fixed;";
       else
       	styleText += "position:absolute;";
 
@@ -967,6 +977,8 @@ SmokeMonster.Sprite = function(parentNode)
   this.skew = new SmokeMonster.Vector(0.0, 0.0);
   this.shadow = new SmokeMonster.Shadow();
   this.texture = new SmokeMonster.Texture();
+
+  this.sticky = false;
 
   this.href = "";
   
@@ -1280,8 +1292,8 @@ SmokeMonster.Sprite = function(parentNode)
   	  
     if ((this.position.x != 0) || (this.position.y != 0))
     {
-      if (this.parent)
-      	styleText += "position:relative;";
+      if (this.sticky)
+      	styleText += "position:fixed;";
       else
       	styleText += "position:absolute;";
 
