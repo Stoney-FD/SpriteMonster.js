@@ -120,6 +120,9 @@
 // SmokeMonster namepace - He is coming for you next (I really need to quit on the Lost references, right?)
 if (typeof SmokeMonster == 'undefined') var SmokeMonster = {};
 
+// You probably already know Modernizr is cool, we use Modernizr to test for CSS3 stuff
+if (typeof Modernizr == 'undefined') var Modernizr = {};
+
 var objectCount = 0,
 	  IE = document.all ? true : false;
 
@@ -951,17 +954,19 @@ SmokeMonster.Sprite = function(parentNode)
       styleText = "",
       transText = "",
       anim = new Array(),
-	    hyperlink;
+	  hyperlink = null;
 
   // Public
-  this.parent = (typeof(parentNode) == "undefined") ? null : parentNode;
 
   this.id = createNewUniqueID("sprite");
 
   this.node = document.createElement("div");
   this.node.id = this.id;
-  
-  SmokeMonster.add('body', this.node);
+
+  this.parent = parentNode;
+
+  (typeof(parentNode) == "undefined") ? SmokeMonster.add('body', this.node) : SmokeMonster.add(parentNode, this.node);
+
 
   this.alpha = 255;
   this.angle = 0.0;
@@ -1032,8 +1037,9 @@ SmokeMonster.Sprite = function(parentNode)
   ///// Click-Event for hyperlinks
   this.click(function (event)
   {
-    if (hyperlink != "")
-	  location.href = hyperlink;
+    if ((hyperlink == "") || (hyperlink == null)) return;
+
+	location.href = hyperlink;
   });
   ////
   
@@ -1250,6 +1256,19 @@ SmokeMonster.Sprite = function(parentNode)
   	  return new SmokeMonster.Vector(this.position.x + parent.getAbsolutePosition().x, this.position.y + parent.getAbsolutePosition().y, this.position.z + parent.getAbsolutePosition().z);
   }
 
+  this.remove = function()
+  {
+    if (typeof(parentNode) == "string")
+      SmokeMonster.remove(parentNode, this.node);
+    else
+    {
+      if (parentNode == "undefined")
+        SmokeMonster.remove('body', this.node);
+      else
+        SmokeMonster.remove(parentNode, this.node);
+    }
+  }
+
   this.draw = function()
   {
     if (!this.texture.isLoaded()) return;
@@ -1287,10 +1306,12 @@ SmokeMonster.Sprite = function(parentNode)
   	else
   	  styleText += "background: url({0});".format(this.texture.src);
 
+    styleText += "background-repeat:no-repeat;";
+
     if ((Modernizr.opacity) && (this.alpha != 255))
-      styleText += "filter:alpha(opacity={0}); -moz-opacity:{1}; -khtml-opacity:{1}; opacity:{1}; ".format(this.alpha, this.alpha / 255);
+      styleText += "filter:alpha(opacity={0}); -moz-opacity:{1}; -khtml-opacity:{1}; opacity:{1}; ".format((this.alpha / 255) * 100, this.alpha / 255);
   	  
-    if ((this.position.x != 0) || (this.position.y != 0))
+    if ((this.position.x != 0) || (this.position.y != 0) || (this.offset.position.x != 0) || (this.offset.position.y != 0))
     {
       if (this.sticky)
       	styleText += "position:fixed;";
@@ -1382,9 +1403,15 @@ SmokeMonster.Sprite = function(parentNode)
     if (!this.clipRect.isEmpty())
     {
     	if (this.scaleClipRect)
-        	styleText += "clip:rect({0}px, {1}px, {2}px, {3}px); ".format(this.clipRect.y * this.scale.y, (this.clipRect.w + this.clipRect.x) * this.scale.x, (this.clipRect.h + this.clipRect.y) * this.scale.y, this.clipRect.x * this.scale.x);
+        {
+            if ((this.clipRect.x != 0) || (this.clipRect.y != 0)) styleText += "background-position: {0}px {1}px;".format(-(this.clipRect.x * this.scale.x), -(this.clipRect.y * this.scale.y));
+        	styleText += "clip:rect({0}px {1}px {2}px {3}px); ".format(0, (this.clipRect.w + this.clipRect.x) * this.scale.x, (this.clipRect.h + this.clipRect.y) * this.scale.y, 0);
+        }
         else
-    		styleText += "clip:rect({0}px, {1}px, {2}px, {3}px); ".format(this.clipRect.y, (this.clipRect.w + this.clipRect.x), (this.clipRect.h + this.clipRect.y), this.clipRect.x);
+        {
+            if ((this.clipRect.x != 0) || (this.clipRect.y != 0)) styleText += "background-position: {0}px {1}px;".format(-this.clipRect.x, -this.clipRect.y);
+    		styleText += "clip:rect({0}px {1}px {2}px {3}px); ".format(0, (this.clipRect.w + this.clipRect.x), (this.clipRect.h + this.clipRect.y), 0);
+        }
     }
 	
 	if ((Modernizr.boxshadow) && (this.shadow.visible))
